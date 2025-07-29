@@ -1,23 +1,6 @@
 # Home Assistant MCP
 
-Connect Claude Desktop to your complete Home Assistant system with both historical data analysis and real-time control.
-
-## Features
-
-### **Historical Data**
-Query entity history, statistics, and logbook entries
-
-### **Real-time Control** 
-Get current states and control any device or service
-
-### **System Management**
-Access version info, error logs, restart services
-
-### **Automation Support**
-List, debug, and get guidance on automations
-
-### **Smart Search**
-Find entities by name, domain, or attributes
+This MCP server improves on other tools by allowing access to historical data from Home Assistant to help you build out rich automations using AI tools such as Claude Desktop, Claude Code, Cursor and many more.
 
 ## Quick Install
 
