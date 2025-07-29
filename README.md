@@ -2,8 +2,6 @@
   <img src="docs/logo.png" alt="Home Assistant Logo" width="500">
 </div>
 
-# Home Assistant MCP
-
 This MCP server improves on other tools by allowing access to historical data from Home Assistant to help you build out rich automations using AI tools such as Claude Desktop, Claude Code, Cursor and many more.
 
 ## Quick Install
