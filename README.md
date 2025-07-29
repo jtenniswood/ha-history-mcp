@@ -6,6 +6,15 @@
 
 This MCP server improves on other tools by allowing access to historical data from Home Assistant to help you build out rich automations using AI tools such as Claude Desktop, Claude Code, Cursor and many more.
 
+## What You Can Do
+
+- **Control devices**: *"Turn on the living room lights"* 
+- **Check status**: *"What's the current temperature in the bedroom?"*
+- **View history**: *"Show me energy usage for the past week"*
+- **Manage automations**: *"List my automations and their last trigger times"*
+- **Search entities**: *"Find all temperature sensors"*
+- **System monitoring**: *"Check my Home Assistant error log"*
+
 ## Quick Install
 
 ### For Claude Desktop
@@ -40,16 +49,6 @@ This MCP server improves on other tools by allowing access to historical data fr
 ```
 2. **Update your credentials** in the JSON above
 3. **Restart Cursor** to load the MCP server
-
-
-## What You Can Do
-
-- **Control devices**: *"Turn on the living room lights"* 
-- **Check status**: *"What's the current temperature in the bedroom?"*
-- **View history**: *"Show me energy usage for the past week"*
-- **Manage automations**: *"List my automations and their last trigger times"*
-- **Search entities**: *"Find all temperature sensors"*
-- **System monitoring**: *"Check my Home Assistant error log"*
 
 ## Getting Your Token
 
