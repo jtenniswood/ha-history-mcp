@@ -2,7 +2,12 @@ version: '3.8'
 
 services:
   ha-history-mcp:
-    build: .
+    # Use published image by default (comment out 'image' and uncomment 'build' for local development)
+    image: ghcr.io/jtenniswood/ha-history-mcp:latest
+    
+    # Uncomment the lines below for local development
+    # build: .
+    
     container_name: ha-history-mcp-server
     restart: unless-stopped
     
@@ -38,20 +43,30 @@ services:
       retries: 3
       start_period: 40s
     
-    # Network configuration
-    networks:
-      - ha-mcp-network
+    # Optional: Mount logs directory
+    # volumes:
+    #   - ./logs:/app/logs
 
-    # Logging
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-networks:
-  ha-mcp-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+  # Development service (for local development with auto-rebuild)
+  ha-history-mcp-dev:
+    build: .
+    container_name: ha-history-mcp-dev
+    restart: "no"  # Don't auto-restart in development
+    profiles:
+      - dev
+    
+    environment:
+      - HA_URL=${HA_URL}
+      - HA_TOKEN=${HA_TOKEN}
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-30}
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - LOG_LEVEL=DEBUG  # More verbose logging for development
+    
+    # Mount source code for development
+    volumes:
+      - ./src:/app/src:ro
+      - ./logs:/app/logs
+    
+    security_opt:
+      - no-new-privileges:true
