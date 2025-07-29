@@ -2,6 +2,23 @@
 
 Connect Claude Desktop to your complete Home Assistant system with both historical data analysis and real-time control.
 
+## Features
+
+### **Historical Data**
+Query entity history, statistics, and logbook entries
+
+### **Real-time Control** 
+Get current states and control any device or service
+
+### **System Management**
+Access version info, error logs, restart services
+
+### **Automation Support**
+List, debug, and get guidance on automations
+
+### **Smart Search**
+Find entities by name, domain, or attributes
+
 ## Quick Install
 
 ### Desktop Extension (Claude Desktop)
@@ -26,25 +43,7 @@ services:
       - HA_URL=https://homeassistant.local:8123
       - HA_TOKEN=your-long-lived-token
       - TRANSPORT=http
-
-# Using Docker directly
-docker run -p 3000:3000 \
-  -e HA_URL="https://homeassistant.local:8123" \
-  -e HA_TOKEN="your-token" \
-  -e TRANSPORT=http \
-  ghcr.io/jtenniswood/home-assistant-mcp:latest
 ```
-
-#### Building Locally
-```bash
-# Clone and build
-git clone https://github.com/jtenniswood/home-assistant-mcp.git
-cd home-assistant-mcp
-docker-compose up -d
-```
-
-**MCP Endpoint**: `http://localhost:3000/sse`  
-**Health Check**: `http://localhost:3000/health`
 
 ## What You Can Do
 
@@ -55,58 +54,12 @@ docker-compose up -d
 - **Search entities**: *"Find all temperature sensors"*
 - **System monitoring**: *"Check my Home Assistant error log"*
 
-## Features
-
-### 📊 **Historical Data**
-Query entity history, statistics, and logbook entries
-
-### 🎛️ **Real-time Control** 
-Get current states and control any device or service
-
-### 🔧 **System Management**
-Access version info, error logs, restart services
-
-### 🤖 **Automation Support**
-List, debug, and get guidance on automations
-
-### 🔍 **Smart Search**
-Find entities by name, domain, or attributes
-
 ## Getting Your Token
 
 1. Go to **Home Assistant → Settings → Profile → Security**
 2. Scroll to **"Long-lived access tokens"**
 3. Click **"Create Token"** and name it "Claude MCP"
 4. **Copy the token** and use it in your configuration
-
-## Available Images
-
-| Platform | Registry | Image |
-|----------|----------|-------|
-| **Docker Hub** | `docker.io` | `jtenniswood/home-assistant-mcp:latest` |
-| **GitHub** | `ghcr.io` | `ghcr.io/jtenniswood/home-assistant-mcp:latest` |
-
-All images support both `linux/amd64` and `linux/arm64` architectures.
-
-## Development
-
-```bash
-# Clone repository
-git clone https://github.com/jtenniswood/home-assistant-mcp.git
-cd home-assistant-mcp
-
-# Install dependencies
-npm install
-
-# Run locally (stdio mode)
-export HA_URL="https://homeassistant.local:8123"
-export HA_TOKEN="your-token"
-npm start
-
-# Run in HTTP mode
-export TRANSPORT=http
-npm start
-```
 
 ## Troubleshooting
 
