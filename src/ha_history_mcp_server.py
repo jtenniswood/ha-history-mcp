@@ -7,7 +7,7 @@ from urllib.parse import urljoin, quote
 
 import httpx
 from mcp.server.fastmcp import FastMCP
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 # Configure logging to stderr only (important for MCP STDIO)
 logging.basicConfig(
@@ -20,13 +20,15 @@ logger = logging.getLogger(__name__)
 # Initialize FastMCP server
 mcp = FastMCP("home-assistant-history")
 
-# Configuration from environment
+# Configuration from environment (allow import without credentials for testing)
 HA_URL = os.getenv("HA_URL", "").rstrip("/")
 HA_TOKEN = os.getenv("HA_TOKEN", "")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "30"))
 
-if not HA_URL or not HA_TOKEN:
-    raise ValueError("HA_URL and HA_TOKEN environment variables are required")
+def validate_environment():
+    """Validate required environment variables."""
+    if not HA_URL or not HA_TOKEN:
+        raise ValueError("HA_URL and HA_TOKEN environment variables are required")
 
 # Pydantic models for structured responses
 class EntityHistoryResponse(BaseModel):
@@ -386,6 +388,9 @@ async def get_logbook_entries(
         raise ValueError(f"Failed to get logbook entries: {str(e)}")
 
 if __name__ == "__main__":
+    # Validate environment variables when server is actually run
+    validate_environment()
+    
     logger.info(f"Starting Home Assistant History MCP Server")
     logger.info(f"Connected to: {HA_URL}")
     logger.info(f"Request timeout: {REQUEST_TIMEOUT}s")
