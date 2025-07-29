@@ -52,7 +52,20 @@ jobs:
 
         ## Quick Start
         \`\`\`bash
-        docker run -e HA_URL=your-ha-url -e HA_TOKEN=your-token ghcr.io/jtenniswood/ha-history-mcp:latest
+        # One command setup with your credentials
+        docker run -d \\
+          --name ha-history-mcp \\
+          -e HA_URL=\"https://your-homeassistant.com\" \\
+          -e HA_TOKEN=\"your-token\" \\
+          --restart unless-stopped \\
+          ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}
+        \`\`\`
+
+        Or download docker-compose.yml and edit your credentials:
+        \`\`\`bash
+        curl -O https://github.com/jtenniswood/ha-history-mcp/releases/download/${{ steps.get_version.outputs.tag_name }}/docker-compose.yml
+        # Edit HA_URL and HA_TOKEN in the file
+        docker-compose up -d
         \`\`\`"
         else
           # Generate changelog from commits
@@ -78,53 +91,81 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.get_version.outputs.tag_name, '-') }}
 
-    - name: Upload docker-compose.yml
+    - name: Upload public docker-compose.yml
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./docker-compose.yml
+        asset_path: ./docker-compose.public.yml
         asset_name: docker-compose.yml
         asset_content_type: text/plain
 
-    - name: Create deployment example
+    - name: Create quick-start guide
       run: |
-        cat > docker-compose.example.yml << 'EOF'
-        version: '3.8'
-        
-        services:
-          ha-history-mcp:
-            image: ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}
-            container_name: ha-history-mcp-server
-            restart: unless-stopped
-            
-            environment:
-              - HA_URL=${HA_URL}
-              - HA_TOKEN=${HA_TOKEN}
-              - REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-30}
-              - PYTHONUNBUFFERED=1
-              - PYTHONDONTWRITEBYTECODE=1
-            
-            security_opt:
-              - no-new-privileges:true
-            
-            deploy:
-              resources:
-                limits:
-                  memory: 512M
-                  cpus: '0.5'
-                reservations:
-                  memory: 256M
-                  cpus: '0.1'
+        cat > QUICK-START.md << 'EOF'
+        # Quick Start Guide
+
+        ## One-Command Setup
+
+        Replace `YOUR_URL` and `YOUR_TOKEN` with your Home Assistant details:
+
+        ```bash
+        docker run -d \
+          --name ha-history-mcp \
+          -e HA_URL="YOUR_URL" \
+          -e HA_TOKEN="YOUR_TOKEN" \
+          --restart unless-stopped \
+          ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}
+        ```
+
+        ## Docker Compose Setup
+
+        1. Download the docker-compose.yml:
+        ```bash
+        curl -O https://github.com/jtenniswood/ha-history-mcp/releases/download/${{ steps.get_version.outputs.tag_name }}/docker-compose.yml
+        ```
+
+        2. Edit the file and replace:
+        - `HA_URL=https://your-homeassistant.com` → Your HA URL
+        - `HA_TOKEN=your-long-lived-access-token` → Your HA token
+
+        3. Start the service:
+        ```bash
+        docker-compose up -d
+        ```
+
+        ## Configure Claude Desktop
+
+        Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+        ```json
+        {
+          "mcpServers": {
+            "ha-history": {
+              "command": "docker",
+              "args": [
+                "exec", "-i", "ha-history-mcp-server", 
+                "python", "src/ha_history_mcp_server.py"
+              ]
+            }
+          }
+        }
+        ```
+
+        ## Test
+
+        Ask Claude: "Show me the temperature history for the last 24 hours"
+
+        For full documentation, see: https://github.com/jtenniswood/ha-history-mcp
         EOF
 
-    - name: Upload deployment example
+    - name: Upload quick-start guide
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./docker-compose.example.yml
-        asset_name: docker-compose.example.yml
+        asset_path: ./QUICK-START.md
+        asset_name: QUICK-START.md
         asset_content_type: text/plain

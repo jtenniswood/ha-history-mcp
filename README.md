@@ -16,40 +16,59 @@ A secure, containerized Model Context Protocol (MCP) server that provides LLMs w
 - **Flexible Time Ranges**: Support for relative and absolute time specifications
 - **Input Validation**: Comprehensive validation and error handling
 
-## 🚀 Quick Start (Using Published Image)
+## 🚀 Quick Start - Use the Public Container
 
-### Option 1: Using Docker Run (Simplest)
+### ⚡ One-Command Setup
 
 ```bash
-# Pull and run the latest published image
+# Replace with YOUR Home Assistant URL and token
 docker run -d \
   --name ha-history-mcp \
   -e HA_URL="https://your-homeassistant.com" \
   -e HA_TOKEN="your-long-lived-access-token" \
+  --restart unless-stopped \
   ghcr.io/jtenniswood/ha-history-mcp:latest
 ```
 
-### Option 2: Using Docker Compose (Recommended)
+### 🐳 Docker Compose (Recommended)
 
-1. **Create a `.env` file:**
-```bash
-cat > .env << EOF
-HA_URL=https://your-homeassistant.com
-HA_TOKEN=your-long-lived-access-token
-REQUEST_TIMEOUT=30
-EOF
+Create a `docker-compose.yml` file:
+
+```yaml
+version: '3.8'
+
+services:
+  ha-history-mcp:
+    image: ghcr.io/jtenniswood/ha-history-mcp:latest
+    container_name: ha-history-mcp-server
+    restart: unless-stopped
+    environment:
+      - HA_URL=https://your-homeassistant.com
+      - HA_TOKEN=your-long-lived-access-token
+      - REQUEST_TIMEOUT=30
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
 ```
 
-2. **Download the docker-compose.yml:**
+Then run:
 ```bash
-curl -O https://github.com/jtenniswood/ha-history-mcp/releases/latest/download/docker-compose.example.yml
-mv docker-compose.example.yml docker-compose.yml
-```
-
-3. **Start the service:**
-```bash
+# Edit the HA_URL and HA_TOKEN in docker-compose.yml first!
 docker-compose up -d
 ```
+
+### 🔧 Environment Variables
+
+**Required:**
+- `HA_URL` - Your Home Assistant URL (e.g., `https://homeassistant.local:8123`)
+- `HA_TOKEN` - Your Home Assistant long-lived access token
+
+**Optional:**
+- `REQUEST_TIMEOUT` - API timeout in seconds (default: 30)
 
 ## 📦 Available Images
 
@@ -61,23 +80,13 @@ The project publishes multi-architecture Docker images to GitHub Container Regis
 
 **Supported architectures**: `linux/amd64`, `linux/arm64`
 
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `HA_URL` | ✅ | - | Home Assistant URL (e.g., `https://homeassistant.local:8123`) |
-| `HA_TOKEN` | ✅ | - | Long-lived access token from Home Assistant |
-| `REQUEST_TIMEOUT` | ❌ | `30` | HTTP request timeout in seconds |
-
-### Creating a Home Assistant Token
+## 🔑 Creating a Home Assistant Token
 
 1. Go to Home Assistant → Profile → Security
 2. Scroll down to "Long-lived access tokens"
 3. Click "Create Token"
 4. Give it a name like "MCP History Server"
-5. Copy the generated token
+5. Copy the generated token and use it as `HA_TOKEN`
 
 ## 🖥️ MCP Client Configuration
 
@@ -85,8 +94,7 @@ The project publishes multi-architecture Docker images to GitHub Container Regis
 
 Add to your Claude Desktop configuration:
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
+**Location**: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 ```json
 {
@@ -115,6 +123,36 @@ Add to your Claude Desktop configuration:
 }
 ```
 
+## 🧪 Test Your Setup
+
+1. **Check container status:**
+```bash
+docker ps | grep ha-history-mcp
+```
+
+2. **View logs:**
+```bash
+docker logs ha-history-mcp-server
+```
+
+3. **Test Home Assistant connection:**
+```bash
+docker exec ha-history-mcp-server python -c "
+import os, asyncio, httpx
+async def test():
+    url = os.getenv('HA_URL')
+    token = os.getenv('HA_TOKEN')
+    headers = {'Authorization': f'Bearer {token}'}
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f'{url}/api/', headers=headers)
+        print(f'✅ Connected! Status: {response.status_code}')
+asyncio.run(test())
+"
+```
+
+4. **Try in Claude Desktop:**
+Ask Claude: *"Show me the temperature history for the last 24 hours"*
+
 ## 🛠️ Development Setup
 
 For local development and contributions:
@@ -126,7 +164,7 @@ git clone https://github.com/jtenniswood/ha-history-mcp.git
 cd ha-history-mcp
 
 # Create environment file
-cp .env.example .env
+cp env.example .env
 # Edit .env with your Home Assistant details
 ```
 
