@@ -1,0 +1,48 @@
+{
+  "name": "home-assistant-mcp",
+  "version": "1.0.0",
+  "description": "Complete Home Assistant integration with historical data analysis and real-time control",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "docker:build": "docker build -t home-assistant-mcp .",
+    "docker:run": "docker run -p 3000:3000 -e HA_URL=$HA_URL -e HA_TOKEN=$HA_TOKEN -e TRANSPORT=http home-assistant-mcp",
+    "build:dxt": "rm -f *.dxt && zip -r home-assistant-mcp.dxt manifest.json server/ node_modules/ package.json package-lock.json icon.svg",
+    "release": "npm run build:dxt"
+  },
+  "keywords": [
+    "home-assistant",
+    "smart-home", 
+    "automation",
+    "iot",
+    "history",
+    "statistics",
+    "control",
+    "mcp",
+    "claude",
+    "docker"
+  ],
+  "author": {
+    "name": "jtenniswood",
+    "url": "https://github.com/jtenniswood"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jtenniswood/home-assistant-mcp.git"
+  },
+  "homepage": "https://github.com/jtenniswood/home-assistant-mcp",
+  "bugs": {
+    "url": "https://github.com/jtenniswood/home-assistant-mcp/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.2",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

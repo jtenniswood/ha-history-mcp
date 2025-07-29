@@ -1,56 +1,37 @@
-# Use Python 3.11 slim image for security and size
-FROM python:3.11-slim
+FROM node:18-alpine
 
-# Metadata labels
-LABEL org.opencontainers.image.title="Home Assistant History MCP Server"
-LABEL org.opencontainers.image.description="MCP server providing access to Home Assistant historical data"
-LABEL org.opencontainers.image.url="https://github.com/jtenniswood/ha-history-mcp"
-LABEL org.opencontainers.image.documentation="https://github.com/jtenniswood/ha-history-mcp#readme"
-LABEL org.opencontainers.image.source="https://github.com/jtenniswood/ha-history-mcp"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="jtenniswood"
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
 
-# Create non-root user for security
-RUN groupadd -r mcpuser && useradd -r -g mcpuser mcpuser
-
-# Set working directory
+# Create app directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Copy package files
+COPY package*.json ./
 
-# Copy requirements first (for better Docker layer caching)
-COPY requirements.txt .
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Copy server files
+COPY server/ ./server/
 
-# Copy application code
-COPY src/ ./src/
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
 
-# Copy version file
-COPY VERSION .
+# Change ownership
+RUN chown -R nodejs:nodejs /app
+USER nodejs
 
-# Change ownership to non-root user
-RUN chown -R mcpuser:mcpuser /app
-
-# Switch to non-root user
-USER mcpuser
+# Expose port for HTTP transport
+EXPOSE 3000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "fetch('http://localhost:3000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"
 
-# Expose no ports (MCP uses STDIO)
-# EXPOSE 
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
 
-# Environment variables (with defaults)
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Run the MCP server
-CMD ["python", "src/ha_history_mcp_server.py"]
+# Start the server
+CMD ["node", "server/index.js"] 

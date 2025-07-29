@@ -1,0 +1,48 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Check for syntax errors
+      run: node --check server/index.js
+
+    - name: Build DXT package
+      run: npm run build:dxt
+
+    - name: Verify DXT package
+      run: |
+        if [ ! -f "home-assistant-mcp.dxt" ]; then
+          echo "DXT package was not created"
+          exit 1
+        fi
+        echo "DXT package size: $(ls -lh home-assistant-mcp.dxt | awk '{print $5}')"
+        
+    - name: Upload DXT artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: home-assistant-mcp-dxt-node-${{ matrix.node-version }}
+        path: home-assistant-mcp.dxt 

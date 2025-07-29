@@ -1,154 +1,93 @@
-name: Create Release
+name: Build and Release
 
 on:
   push:
     tags:
       - 'v*'
-
-permissions:
-  contents: write
-  packages: write
+  workflow_dispatch:
 
 jobs:
-  create-release:
+  build-and-release:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+      packages: read
+
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
       with:
-        fetch-depth: 0
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build Desktop Extension
+      run: |
+        # Remove any existing DXT file
+        rm -f *.dxt
+        
+        # Create the DXT package
+        zip -r home-assistant-mcp.dxt \
+          manifest.json \
+          server/ \
+          node_modules/ \
+          package.json \
+          package-lock.json \
+          icon.svg
 
     - name: Get version from tag
-      id: get_version
-      run: |
-        TAG_NAME=${GITHUB_REF#refs/tags/}
-        VERSION=${TAG_NAME#v}
-        echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Generate changelog
-      id: changelog
-      run: |
-        # Get the previous tag
-        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-        
-        if [ -z "$PREV_TAG" ]; then
-          # First release
-          CHANGELOG="🎉 Initial release of Home Assistant History MCP Server
-
-        ## Features
-        - 🏠 Connect to Home Assistant via REST API
-        - 📊 Retrieve historical data for entities
-        - 📈 Access long-term statistics with configurable periods
-        - 🔍 Entity discovery and search capabilities  
-        - 📋 Logbook integration for events
-        - 🐳 Secure Docker deployment
-        - ⏰ Flexible time range support
-        - ✅ Simple configuration with direct credentials
-
-        ## Quick Setup
-        
-        Add to Claude Desktop config:
-        
-        \`\`\`json
-        {
-          \"mcpServers\": {
-            \"ha-history\": {
-              \"command\": \"docker\",
-              \"args\": [
-                \"run\", \"--rm\", \"-i\",
-                \"-e\", \"HA_URL=https://your-homeassistant.com\",
-                \"-e\", \"HA_TOKEN=your-token\",
-                \"ghcr.io/jtenniswood/ha-history-mcp:$TAG_NAME\"
-              ]
-            }
-          }
-        }
-        \`\`\`
-        
-        Replace with your actual Home Assistant URL and token, then restart Claude Desktop!"
-        else
-          # Generate changelog from commits
-          CHANGELOG="## What's Changed"
-          CHANGELOG="$CHANGELOG"$'\n'"$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" --reverse)"
-        fi
-        
-        # Save changelog to output
-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
-        echo "$CHANGELOG" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ steps.get_version.outputs.tag_name }}
-        release_name: Release ${{ steps.get_version.outputs.tag_name }}
-        body: ${{ steps.changelog.outputs.changelog }}
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: Release ${{ steps.version.outputs.VERSION }}
+        body: |
+          ## What's Changed
+          
+          ### Desktop Extension
+          - Download `home-assistant-mcp.dxt` and double-click to install in Claude Desktop
+          
+          ### Docker Container
+          - Available at `ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}`
+          - Also tagged as `ghcr.io/${{ github.repository }}:latest`
+          
+          ### Usage
+          
+          **Desktop Extension:**
+          ```bash
+          # Download and double-click the .dxt file
+          ```
+          
+          **Docker:**
+          ```bash
+          docker run -p 3000:3000 \
+            -e HA_URL="https://homeassistant.local:8123" \
+            -e HA_TOKEN="your-token" \
+            -e TRANSPORT=http \
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
+          ```
+          
+          **Docker Compose:**
+          ```yaml
+          services:
+            home-assistant-mcp:
+              image: ghcr.io/${{ github.repository }}:${{ steps.version.outputs.VERSION }}
+              ports:
+                - "3000:3000"
+              environment:
+                - HA_URL=https://homeassistant.local:8123
+                - HA_TOKEN=your-token
+                - TRANSPORT=http
+          ```
+        files: |
+          home-assistant-mcp.dxt
         draft: false
-        prerelease: ${{ contains(steps.get_version.outputs.tag_name, '-') }}
-
-    - name: Create setup guide
-      run: |
-        cat > SETUP-GUIDE.md << 'EOF'
-        # Home Assistant MCP Server Setup
-
-        ## Quick Setup
-
-        1. **Get your Home Assistant token:**
-           - Go to Home Assistant → Profile → Security
-           - Create a "Long-lived access token"
-           - Copy the token
-
-        2. **Add to Claude Desktop config:**
-
-           **File**: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
-           **File**: `%APPDATA%/Claude/claude_desktop_config.json` (Windows)
-
-           ```json
-           {
-             "mcpServers": {
-               "ha-history": {
-                 "command": "docker",
-                 "args": [
-                   "run", "--rm", "-i",
-                   "-e", "HA_URL=https://your-homeassistant.com",
-                   "-e", "HA_TOKEN=your-long-lived-access-token",
-                   "ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}"
-                 ]
-               }
-             }
-           }
-           ```
-
-           **Replace with your actual values:**
-           - `https://your-homeassistant.com` → Your Home Assistant URL
-           - `your-long-lived-access-token` → Your Home Assistant token
-
-        3. **Restart Claude Desktop**
-
-        4. **Test it:**
-           Ask Claude: "What entities are available in my Home Assistant?"
-
-        ## Example Queries
-
-        - "Show me the temperature history for the last 24 hours"
-        - "What sensors are available in my Home Assistant?"
-        - "Get daily temperature statistics for the past month"
-        - "What events happened in the last hour?"
-
-        For more information: https://github.com/jtenniswood/ha-history-mcp
-        EOF
-
-    - name: Upload setup guide
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./SETUP-GUIDE.md
-        asset_name: SETUP-GUIDE.md
-        asset_content_type: text/plain
+        prerelease: false 

@@ -1,0 +1,134 @@
+{
+  "dxt_version": "0.1",
+  "name": "home-assistant-mcp",
+  "display_name": "Home Assistant MCP",
+  "version": "1.0.0",
+  "description": "Complete Home Assistant integration with historical data analysis and real-time control",
+  "long_description": "This extension provides comprehensive Home Assistant integration for Claude Desktop, enabling both historical data analysis and real-time device control. Features include entity history and statistics, real-time state monitoring and control, automation management, system information access, guided conversation prompts for common tasks, and advanced entity search and management capabilities.",
+  "author": {
+    "name": "jtenniswood",
+    "url": "https://github.com/jtenniswood"
+  },
+  "repository": {
+    "type": "git", 
+    "url": "https://github.com/jtenniswood/ha-history-mcp"
+  },
+  "homepage": "https://github.com/jtenniswood/ha-history-mcp",
+  "documentation": "https://github.com/jtenniswood/ha-history-mcp#readme",
+  "support": "https://github.com/jtenniswood/ha-history-mcp/issues",
+  "icon": "icon.svg",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "HA_URL": "${user_config.ha_url}",
+        "HA_TOKEN": "${user_config.ha_token}",
+        "REQUEST_TIMEOUT": "${user_config.request_timeout}"
+      }
+    }
+  },
+  "user_config": {
+    "ha_url": {
+      "type": "string",
+      "title": "Home Assistant URL",
+      "description": "The URL of your Home Assistant instance (e.g., https://homeassistant.local:8123 or http://192.168.1.100:8123)",
+      "required": true,
+      "placeholder": "https://homeassistant.local:8123"
+    },
+    "ha_token": {
+      "type": "string", 
+      "title": "Home Assistant Long-Lived Access Token",
+      "description": "Your Home Assistant long-lived access token. Create one in Settings > Profile > Security.",
+      "sensitive": true,
+      "required": true
+    },
+    "request_timeout": {
+      "type": "string",
+      "title": "Request Timeout (seconds)",
+      "description": "Timeout for API requests to Home Assistant (default: 30)",
+      "required": false,
+      "default": "30"
+    }
+  },
+  "tools": [
+    {
+      "name": "get_entity_history",
+      "description": "Get historical data for a specific Home Assistant entity"
+    },
+    {
+      "name": "get_entity_statistics", 
+      "description": "Get long-term statistics for a Home Assistant entity"
+    },
+    {
+      "name": "get_available_entities",
+      "description": "Get list of available entities with filtering"
+    },
+    {
+      "name": "get_logbook_entries",
+      "description": "Get Home Assistant logbook entries (events and state changes)"
+    },
+    {
+      "name": "get_entity",
+      "description": "Get the current state of a specific Home Assistant entity"
+    },
+    {
+      "name": "entity_action",
+      "description": "Perform actions on Home Assistant entities (turn on/off/toggle)"
+    },
+    {
+      "name": "call_service_tool",
+      "description": "Call any Home Assistant service"
+    },
+    {
+      "name": "restart_ha",
+      "description": "Restart Home Assistant"
+    },
+    {
+      "name": "get_version",
+      "description": "Get Home Assistant version information"
+    },
+    {
+      "name": "get_error_log",
+      "description": "Get the Home Assistant error log"
+    },
+    {
+      "name": "search_entities_tool",
+      "description": "Search for entities by name, entity_id, or attributes"
+    },
+    {
+      "name": "domain_summary_tool",
+      "description": "Get a summary of entities in a specific domain"
+    },
+    {
+      "name": "list_automations",
+      "description": "Get a list of all Home Assistant automations"
+    }
+  ],
+  "resources": [
+    {
+      "uri": "hass://entities/{entity_id}",
+      "description": "Get entity state via resource URI"
+    },
+    {
+      "uri": "hass://entities/{entity_id}/detailed",
+      "description": "Get detailed entity information via resource URI"  
+    },
+    {
+      "uri": "hass://entities",
+      "description": "Get all entities grouped by domain"
+    },
+    {
+      "uri": "hass://entities/domain/{domain}",
+      "description": "Get entities for specific domain"
+    },
+    {
+      "uri": "hass://search/{query}/{limit}",
+      "description": "Search entities with custom limits"
+    }
+  ],
+  "keywords": ["home-assistant", "smart-home", "automation", "iot", "history", "statistics", "control"],
+  "license": "MIT"
+}
