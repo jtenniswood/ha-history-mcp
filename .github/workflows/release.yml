@@ -12,9 +12,6 @@ permissions:
 jobs:
   create-release:
     runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      tag_name: ${{ steps.get_version.outputs.tag_name }}
     
     steps:
     - name: Checkout code
@@ -48,33 +45,36 @@ jobs:
         - 📋 Logbook integration for events
         - 🐳 Secure Docker deployment
         - ⏰ Flexible time range support
-        - ✅ Comprehensive input validation
+        - ✅ Simple configuration with direct credentials
 
-        ## Quick Start
-        \`\`\`bash
-        # One command setup with your credentials
-        docker run -d \\
-          --name ha-history-mcp \\
-          -e HA_URL=\"https://your-homeassistant.com\" \\
-          -e HA_TOKEN=\"your-token\" \\
-          --restart unless-stopped \\
-          ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}
+        ## Quick Setup
+        
+        Add to Claude Desktop config:
+        
+        \`\`\`json
+        {
+          \"mcpServers\": {
+            \"ha-history\": {
+              \"command\": \"docker\",
+              \"args\": [
+                \"run\", \"--rm\", \"-i\",
+                \"-e\", \"HA_URL=https://your-homeassistant.com\",
+                \"-e\", \"HA_TOKEN=your-token\",
+                \"ghcr.io/jtenniswood/ha-history-mcp:$TAG_NAME\"
+              ]
+            }
+          }
+        }
         \`\`\`
-
-        Or download docker-compose.yml and edit your credentials:
-        \`\`\`bash
-        curl -O https://github.com/jtenniswood/ha-history-mcp/releases/download/${{ steps.get_version.outputs.tag_name }}/docker-compose.yml
-        # Edit HA_URL and HA_TOKEN in the file
-        docker-compose up -d
-        \`\`\`"
+        
+        Replace with your actual Home Assistant URL and token, then restart Claude Desktop!"
         else
           # Generate changelog from commits
           CHANGELOG="## What's Changed"
           CHANGELOG="$CHANGELOG"$'\n'"$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" --reverse)"
         fi
         
-        # Save changelog to file and output
-        echo "$CHANGELOG" > CHANGELOG.md
+        # Save changelog to output
         echo "changelog<<EOF" >> $GITHUB_OUTPUT
         echo "$CHANGELOG" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
@@ -91,81 +91,64 @@ jobs:
         draft: false
         prerelease: ${{ contains(steps.get_version.outputs.tag_name, '-') }}
 
-    - name: Upload public docker-compose.yml
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./docker-compose.public.yml
-        asset_name: docker-compose.yml
-        asset_content_type: text/plain
-
-    - name: Create quick-start guide
+    - name: Create setup guide
       run: |
-        cat > QUICK-START.md << 'EOF'
-        # Quick Start Guide
+        cat > SETUP-GUIDE.md << 'EOF'
+        # Home Assistant MCP Server Setup
 
-        ## One-Command Setup
+        ## Quick Setup
 
-        Replace `YOUR_URL` and `YOUR_TOKEN` with your Home Assistant details:
+        1. **Get your Home Assistant token:**
+           - Go to Home Assistant → Profile → Security
+           - Create a "Long-lived access token"
+           - Copy the token
 
-        ```bash
-        docker run -d \
-          --name ha-history-mcp \
-          -e HA_URL="YOUR_URL" \
-          -e HA_TOKEN="YOUR_TOKEN" \
-          --restart unless-stopped \
-          ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}
-        ```
+        2. **Add to Claude Desktop config:**
 
-        ## Docker Compose Setup
+           **File**: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+           **File**: `%APPDATA%/Claude/claude_desktop_config.json` (Windows)
 
-        1. Download the docker-compose.yml:
-        ```bash
-        curl -O https://github.com/jtenniswood/ha-history-mcp/releases/download/${{ steps.get_version.outputs.tag_name }}/docker-compose.yml
-        ```
+           ```json
+           {
+             "mcpServers": {
+               "ha-history": {
+                 "command": "docker",
+                 "args": [
+                   "run", "--rm", "-i",
+                   "-e", "HA_URL=https://your-homeassistant.com",
+                   "-e", "HA_TOKEN=your-long-lived-access-token",
+                   "ghcr.io/jtenniswood/ha-history-mcp:${{ steps.get_version.outputs.tag_name }}"
+                 ]
+               }
+             }
+           }
+           ```
 
-        2. Edit the file and replace:
-        - `HA_URL=https://your-homeassistant.com` → Your HA URL
-        - `HA_TOKEN=your-long-lived-access-token` → Your HA token
+           **Replace with your actual values:**
+           - `https://your-homeassistant.com` → Your Home Assistant URL
+           - `your-long-lived-access-token` → Your Home Assistant token
 
-        3. Start the service:
-        ```bash
-        docker-compose up -d
-        ```
+        3. **Restart Claude Desktop**
 
-        ## Configure Claude Desktop
+        4. **Test it:**
+           Ask Claude: "What entities are available in my Home Assistant?"
 
-        Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+        ## Example Queries
 
-        ```json
-        {
-          "mcpServers": {
-            "ha-history": {
-              "command": "docker",
-              "args": [
-                "exec", "-i", "ha-history-mcp-server", 
-                "python", "src/ha_history_mcp_server.py"
-              ]
-            }
-          }
-        }
-        ```
+        - "Show me the temperature history for the last 24 hours"
+        - "What sensors are available in my Home Assistant?"
+        - "Get daily temperature statistics for the past month"
+        - "What events happened in the last hour?"
 
-        ## Test
-
-        Ask Claude: "Show me the temperature history for the last 24 hours"
-
-        For full documentation, see: https://github.com/jtenniswood/ha-history-mcp
+        For more information: https://github.com/jtenniswood/ha-history-mcp
         EOF
 
-    - name: Upload quick-start guide
+    - name: Upload setup guide
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./QUICK-START.md
-        asset_name: QUICK-START.md
+        asset_path: ./SETUP-GUIDE.md
+        asset_name: SETUP-GUIDE.md
         asset_content_type: text/plain
