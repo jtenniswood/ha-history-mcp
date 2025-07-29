@@ -35,14 +35,14 @@ jobs:
 
     - name: Verify DXT package
       run: |
-        if [ ! -f "home-assistant-mcp.dxt" ]; then
+        if [ ! -f "claude-desktop/home-assistant-mcp.dxt" ]; then
           echo "DXT package was not created"
           exit 1
         fi
-        echo "DXT package size: $(ls -lh home-assistant-mcp.dxt | awk '{print $5}')"
+        echo "DXT package size: $(ls -lh claude-desktop/home-assistant-mcp.dxt | awk '{print $5}')"
         
     - name: Upload DXT artifact
       uses: actions/upload-artifact@v4
       with:
         name: home-assistant-mcp-dxt-node-${{ matrix.node-version }}
-        path: home-assistant-mcp.dxt 
+        path: claude-desktop/home-assistant-mcp.dxt 

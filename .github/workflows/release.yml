@@ -28,11 +28,12 @@ jobs:
 
     - name: Build Desktop Extension
       run: |
-        # Remove any existing DXT file
-        rm -f *.dxt
+        # Create claude-desktop directory and remove any existing DXT file
+        mkdir -p claude-desktop
+        rm -f claude-desktop/*.dxt
         
         # Create the DXT package
-        zip -r home-assistant-mcp.dxt \
+        zip -r claude-desktop/home-assistant-mcp.dxt \
           manifest.json \
           server/ \
           node_modules/ \
@@ -88,6 +89,6 @@ jobs:
                 - TRANSPORT=http
           ```
         files: |
-          home-assistant-mcp.dxt
+          claude-desktop/home-assistant-mcp.dxt
         draft: false
         prerelease: false 
