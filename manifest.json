@@ -2,7 +2,7 @@
   "dxt_version": "0.1",
   "name": "home-assistant-mcp",
   "display_name": "Home Assistant MCP",
-  "version": "1.3.0",
+  "version": "1.2.0",
   "description": "Complete Home Assistant integration with historical data analysis and real-time control",
   "long_description": "This extension provides comprehensive Home Assistant integration for Claude Desktop, enabling both historical data analysis and real-time device control. Features include entity history and statistics, real-time state monitoring and control, automation management, system information access, guided conversation prompts for common tasks, and advanced entity search and management capabilities.",
   "author": {
