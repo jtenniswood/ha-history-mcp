@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo.png" alt="Home Assistant Logo" width="600">
+  <img src="docs/logo.png" alt="Home Assistant Logo" width="500">
 </div>
 
 # Home Assistant MCP
