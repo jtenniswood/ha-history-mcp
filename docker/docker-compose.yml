@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   home-assistant-mcp:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: home-assistant-mcp
     restart: unless-stopped
     ports:
