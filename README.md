@@ -2,6 +2,10 @@
 
 A secure, containerized Model Context Protocol (MCP) server that provides LLMs with access to Home Assistant historical data and statistics.
 
+[![Build and Publish](https://github.com/jtenniswood/ha-history-mcp/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/jtenniswood/ha-history-mcp/actions/workflows/build-and-publish.yml)
+[![Test and Validate](https://github.com/jtenniswood/ha-history-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/jtenniswood/ha-history-mcp/actions/workflows/test.yml)
+[![Docker Pulls](https://img.shields.io/github/packages/jtenniswood/ha-history-mcp?label=Docker%20Pulls)](https://github.com/jtenniswood/ha-history-mcp/pkgs/container/ha-history-mcp)
+
 ## Features
 
 - **Historical Data Access**: Retrieve detailed historical data for any Home Assistant entity
@@ -12,90 +16,77 @@ A secure, containerized Model Context Protocol (MCP) server that provides LLMs w
 - **Flexible Time Ranges**: Support for relative and absolute time specifications
 - **Input Validation**: Comprehensive validation and error handling
 
-## Quick Start
+## 🚀 Quick Start (Using Published Image)
 
-### 1. Clone and Setup
+### Option 1: Using Docker Run (Simplest)
 
 ```bash
-git clone <your-repo>
-cd ha-history-mcp
+# Pull and run the latest published image
+docker run -d \
+  --name ha-history-mcp \
+  -e HA_URL="https://your-homeassistant.com" \
+  -e HA_TOKEN="your-long-lived-access-token" \
+  ghcr.io/jtenniswood/ha-history-mcp:latest
 ```
 
-### 2. Configure Environment
+### Option 2: Using Docker Compose (Recommended)
 
-Create a `.env` file with your Home Assistant details:
-
+1. **Create a `.env` file:**
 ```bash
-# Home Assistant Configuration
-HA_URL=https://homeassistant.tenniswoodnetwork.co.uk
-HA_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyZDc3MDgxOTBiZjA0OWRiOGFmOGM4MWFjNzJjY2M0OSIsImlhdCI6MTc1Mzc5OTQ0MSwiZXhwIjoyMDY5MTU5NDQxfQ.nUv5VEhZtrixMzOwoJozP03ZwgZh4Y4LGHUuJJ7mTWE
-
-# Optional Configuration
+cat > .env << EOF
+HA_URL=https://your-homeassistant.com
+HA_TOKEN=your-long-lived-access-token
 REQUEST_TIMEOUT=30
-LOG_LEVEL=INFO
+EOF
 ```
 
-### 3. Deploy with Docker Compose
+2. **Download the docker-compose.yml:**
+```bash
+curl -O https://github.com/jtenniswood/ha-history-mcp/releases/latest/download/docker-compose.example.yml
+mv docker-compose.example.yml docker-compose.yml
+```
 
+3. **Start the service:**
 ```bash
 docker-compose up -d
 ```
 
-### 4. Test the Server
+## 📦 Available Images
 
-```bash
-# Check if container is running
-docker-compose ps
+The project publishes multi-architecture Docker images to GitHub Container Registry:
 
-# View logs
-docker-compose logs -f ha-history-mcp
-```
+- **Latest stable**: `ghcr.io/jtenniswood/ha-history-mcp:latest`
+- **Specific version**: `ghcr.io/jtenniswood/ha-history-mcp:v1.0.0`
+- **Development**: `ghcr.io/jtenniswood/ha-history-mcp:edge`
 
-## Available Tools
+**Supported architectures**: `linux/amd64`, `linux/arm64`
 
-### `get_entity_history`
-Retrieve detailed historical data for entities.
+## 🔧 Configuration
 
-**Parameters:**
-- `entity_id` (required): Entity ID (e.g., 'sensor.temperature')
-- `hours_back` (optional): Hours back from now (default: 24)
-- `start_time` (optional): Start time in YYYY-MM-DD or ISO format
-- `end_time` (optional): End time in YYYY-MM-DD or ISO format
-- `minimal_response` (optional): Return minimal data (default: true)
+### Environment Variables
 
-### `get_entity_statistics`
-Get long-term statistical data.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `HA_URL` | ✅ | - | Home Assistant URL (e.g., `https://homeassistant.local:8123`) |
+| `HA_TOKEN` | ✅ | - | Long-lived access token from Home Assistant |
+| `REQUEST_TIMEOUT` | ❌ | `30` | HTTP request timeout in seconds |
 
-**Parameters:**
-- `entity_id` (required): Entity ID
-- `days_back` (optional): Days back from now (default: 7)
-- `start_time` (optional): Start time
-- `end_time` (optional): End time
-- `period` (optional): 'hour', 'day', 'week', 'month' (default: 'hour')
+### Creating a Home Assistant Token
 
-### `get_available_entities`
-List available entities with filtering.
+1. Go to Home Assistant → Profile → Security
+2. Scroll down to "Long-lived access tokens"
+3. Click "Create Token"
+4. Give it a name like "MCP History Server"
+5. Copy the generated token
 
-**Parameters:**
-- `domain_filter` (optional): Filter by domain (e.g., 'sensor')
-- `search_term` (optional): Search term for entity names
-- `limit` (optional): Maximum results (default: 100)
+## 🖥️ MCP Client Configuration
 
-### `get_logbook_entries`
-Access logbook entries and events.
+### Claude Desktop
 
-**Parameters:**
-- `hours_back` (optional): Hours back from now (default: 24)
-- `start_time` (optional): Start time
-- `end_time` (optional): End time
-- `entity_id` (optional): Filter by specific entity
-- `limit` (optional): Maximum entries (default: 50)
+Add to your Claude Desktop configuration:
 
-## Usage with MCP Clients
-
-### Claude Desktop Configuration
-
-Add to your `claude_desktop_config.json`:
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
 
 ```json
 {
@@ -111,191 +102,185 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-### VS Code MCP Configuration
-
-Add to your `.vscode/mcp.json`:
+### Continue.dev
 
 ```json
 {
-  "servers": {
+  "mcpServers": {
     "ha-history": {
       "command": "docker",
-      "args": [
-        "exec", "-i", "ha-history-mcp-server",
-        "python", "src/ha_history_mcp_server.py"
-      ]
+      "args": ["exec", "-i", "ha-history-mcp-server", "python", "src/ha_history_mcp_server.py"]
     }
   }
 }
 ```
 
-### Example Queries
+## 🛠️ Development Setup
 
-- "Show me the temperature history for the last 3 days"
-- "What sensors have changed in the last hour?"
-- "Get energy usage statistics for this week"
-- "Show logbook entries for the front door sensor today"
+For local development and contributions:
 
-## Security Features
+### 1. Clone and Setup
 
-- **Non-root container execution**
-- **Resource limits and security policies**
-- **Input validation and sanitization**
-- **Secure token handling via environment variables**
-- **Read-only operations only**
-- **Network isolation**
-
-## API Endpoints
-
-The server implements the following Home Assistant API endpoints:
-
-- `/api/history/period` - Historical entity data
-- `/api/history/statistics` - Long-term statistics
-- `/api/states` - Current entity states
-- `/api/logbook` - Event logbook entries
-
-## Time Format Support
-
-The server supports multiple time formats:
-
-- `YYYY-MM-DD` (e.g., "2024-01-15")
-- `YYYY-MM-DD HH:MM:SS` (e.g., "2024-01-15 14:30:00")
-- `YYYY-MM-DDTHH:MM:SS` (e.g., "2024-01-15T14:30:00")
-- ISO 8601 format with timezone
-
-## Troubleshooting
-
-### Check Container Status
 ```bash
+git clone https://github.com/jtenniswood/ha-history-mcp.git
+cd ha-history-mcp
+
+# Create environment file
+cp .env.example .env
+# Edit .env with your Home Assistant details
+```
+
+### 2. Development with Docker
+
+```bash
+# Start development environment
+docker-compose --profile dev up -d
+
+# View logs
+docker-compose logs -f ha-history-mcp-dev
+
+# Stop development environment
+docker-compose --profile dev down
+```
+
+### 3. Local Python Development
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run directly
+python test_mcp_server.py
+
+# Test Home Assistant connection
+python test_connection.py
+```
+
+## 🧪 Testing
+
+### Automated Tests
+
+The project includes comprehensive GitHub Actions workflows:
+
+- **Build & Publish**: Builds and publishes Docker images
+- **Test & Validate**: Runs Python syntax checks and Docker tests
+- **Security Scan**: Vulnerability scanning with Trivy
+
+### Manual Testing
+
+```bash
+# Test with MCP Inspector
+npx @modelcontextprotocol/inspector docker exec -i ha-history-mcp-server python src/ha_history_mcp_server.py
+
+# Test container health
 docker-compose ps
 docker-compose logs ha-history-mcp
 ```
 
-### Test Home Assistant Connection
-```bash
-docker-compose exec ha-history-mcp python -c "
-import os, asyncio, httpx
-async def test():
-    url = os.getenv('HA_URL')
-    token = os.getenv('HA_TOKEN')
-    headers = {'Authorization': f'Bearer {token}'}
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f'{url}/api/', headers=headers)
-        print(f'Status: {response.status_code}')
-        print(f'Response: {response.text}')
-asyncio.run(test())
-"
+## 📊 Available Tools
+
+The MCP server provides these tools to LLMs:
+
+### `get_entity_history`
+Retrieve detailed historical data for a specific entity.
+
+**Parameters:**
+- `entity_id` (required): Entity ID (e.g., `sensor.temperature`)
+- `start_time` (optional): Start time (ISO format or relative like "1 hour ago")
+- `end_time` (optional): End time (ISO format or relative)
+- `minimal_response` (optional): Return minimal data to reduce payload
+
+### `get_statistics`
+Get long-term statistical data for entities.
+
+**Parameters:**
+- `entity_ids` (required): List of entity IDs
+- `start_time` (optional): Start time for statistics
+- `end_time` (optional): End time for statistics  
+- `period` (optional): Statistical period (`5minute`, `hour`, `day`, `week`, `month`)
+- `statistic_ids` (optional): Specific statistics to retrieve
+- `units` (optional): Unit conversion
+
+### `list_entities`
+Discover available entities in Home Assistant.
+
+**Parameters:**
+- `domain` (optional): Filter by domain (e.g., `sensor`, `light`)
+- `search` (optional): Search entities by name/ID
+- `limit` (optional): Maximum number of entities to return
+
+### `get_logbook_entries`
+Retrieve Home Assistant logbook entries and events.
+
+**Parameters:**
+- `start_time` (optional): Start time for logbook entries
+- `end_time` (optional): End time for logbook entries
+- `entity_id` (optional): Filter by specific entity
+
+## 🔐 Security
+
+- **Non-root container execution**
+- **Security options**: `no-new-privileges`
+- **Resource limits**: Memory and CPU constraints
+- **Token-based authentication** with Home Assistant
+- **Input validation** for all parameters
+- **Vulnerability scanning** in CI/CD pipeline
+
+## 📋 Production Deployment
+
+For production use:
+
+1. **Use specific version tags** instead of `latest`
+2. **Set resource limits** appropriate for your environment
+3. **Configure log rotation**
+4. **Monitor container health**
+5. **Keep tokens secure** and rotate regularly
+
+```yaml
+# Production docker-compose.yml example
+version: '3.8'
+services:
+  ha-history-mcp:
+    image: ghcr.io/jtenniswood/ha-history-mcp:v1.0.0  # Specific version
+    restart: unless-stopped
+    environment:
+      - HA_URL=${HA_URL}
+      - HA_TOKEN=${HA_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 ```
 
-### Common Issues
-
-1. **Authentication Error**: Verify your `HA_TOKEN` is correct and active
-2. **Connection Error**: Check `HA_URL` and network connectivity
-3. **Permission Error**: Ensure token has necessary permissions
-4. **Container Health Check Failed**: Check logs and environment variables
-
-## Development
-
-### Local Development
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export HA_URL="https://homeassistant.tenniswoodnetwork.co.uk"
-export HA_TOKEN="your_token_here"
-
-# Run server
-python src/ha_history_mcp_server.py
-```
-
-### Testing with MCP Inspector
-```bash
-# Install MCP Inspector
-npm install -g @modelcontextprotocol/inspector
-
-# Test the server
-npx @modelcontextprotocol/inspector python src/ha_history_mcp_server.py
-```
-
-### Building Custom Docker Image
-```bash
-# Build image
-docker build -t ha-history-mcp:latest .
-
-# Run container
-docker run -it --env-file .env ha-history-mcp:latest
-```
-
-## Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   MCP Client    │───▶│  MCP Server     │───▶│ Home Assistant  │
-│  (Claude, etc.) │    │   (Docker)      │    │    REST API     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-### Components
-
-- **FastMCP**: Python MCP framework for tool handling
-- **httpx**: Async HTTP client for Home Assistant API calls
-- **Pydantic**: Data validation and serialization
-- **Docker**: Containerization with security best practices
-
-## Configuration Reference
-
-### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `HA_URL` | Home Assistant base URL | - | Yes |
-| `HA_TOKEN` | Long-lived access token | - | Yes |
-| `REQUEST_TIMEOUT` | API request timeout (seconds) | 30 | No |
-| `LOG_LEVEL` | Logging level | INFO | No |
-
-### Docker Compose Configuration
-
-The Docker Compose setup includes:
-
-- Resource limits (512M memory, 0.5 CPU)
-- Health checks
-- Security policies
-- Custom network isolation
-- Log rotation
-
-## Performance Considerations
-
-- Use `minimal_response=true` for better performance on large datasets
-- Limit time ranges for statistics queries
-- Consider using `limit` parameter for entity lists
-- Monitor container resource usage
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and test them
+4. Commit your changes: `git commit -m 'Add amazing feature'`
+5. Push to the branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
 
-## Support
+## 📝 License
 
-For issues and questions:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-1. Check the troubleshooting section
-2. Review Docker and MCP logs
-3. Verify Home Assistant API connectivity
-4. Open an issue with detailed information
+## 🆘 Support
 
----
+- **Issues**: [GitHub Issues](https://github.com/jtenniswood/ha-history-mcp/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jtenniswood/ha-history-mcp/discussions)
+- **Documentation**: Check the [Wiki](https://github.com/jtenniswood/ha-history-mcp/wiki)
 
-**Built with security and performance in mind for production MCP deployments.**
+## 🎯 Roadmap
+
+- [ ] WebSocket support for real-time data
+- [ ] Advanced filtering and aggregation
+- [ ] Integration with Home Assistant add-ons
+- [ ] Grafana dashboard examples
+- [ ] InfluxDB export capabilities
