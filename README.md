@@ -4,29 +4,39 @@ This MCP server improves on other tools by allowing access to historical data fr
 
 ## Quick Install
 
-### Desktop Extension (Claude Desktop)
+### For Claude Desktop
+
 1. **Download** the `home-assistant-mcp.dxt` file from [GitHub Releases](https://github.com/jtenniswood/home-assistant-mcp/releases/latest)
 2. **Double-click** the `.dxt` file to install in Claude Desktop  
 3. **Configure** with your Home Assistant details:
    - **URL**: Your HA instance (e.g., `https://homeassistant.local:8123`)
    - **Token**: Create a long-lived access token in HA Settings > Profile > Security
 
-### Docker Container (Other MCP Clients)
 
-#### Using Pre-built Image (Recommended)
-```bash
-# Using Docker Compose
-version: '3.8'
-services:
-  home-assistant-mcp:
-    image: ghcr.io/jtenniswood/home-assistant-mcp:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - HA_URL=https://homeassistant.local:8123
-      - HA_TOKEN=your-long-lived-token
-      - TRANSPORT=http
+### For Cursor IDE (and most other clients)
+
+1. **Add to Cursor settings** - In your Cursor MCP settings, add:
+```json
+{
+  "mcp": {
+    "servers": {
+      "home-assistant": {
+        "command": "docker",
+        "args": [
+          "run", "--rm", "-i",
+          "-e", "HA_URL=https://homeassistant.local:8123",
+          "-e", "HA_TOKEN=your-long-lived-token",
+          "-e", "TRANSPORT=stdio",
+          "ghcr.io/jtenniswood/home-assistant-mcp:latest"
+        ]
+      }
+    }
+  }
+}
 ```
+2. **Update your credentials** in the JSON above
+3. **Restart Cursor** to load the MCP server
+
 
 ## What You Can Do
 
