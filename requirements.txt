@@ -1,0 +1,11 @@
+# MCP Framework
+mcp[cli]==1.3.0
+
+# HTTP Client
+httpx==0.27.0
+
+# Data Validation (compatible with MCP 1.3.0)
+pydantic>=2.7.2,<3.0.0
+
+# Utilities
+python-dateutil==2.8.2
