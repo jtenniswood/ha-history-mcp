@@ -57,6 +57,10 @@ This MCP server improves on other tools by allowing access to historical data fr
 3. Click **"Create Token"** and name it "Claude MCP"
 4. **Copy the token** and use it in your configuration
 
+## Example Prompt
+
+I want to create an automation to send me a pushover notification when the washing machine as finished, use the historical data for the device X. I want to add this to home assistant using the UI, write the yaml file so I can copy and paste it into the UI to set it up.
+
 ## Troubleshooting
 
 - **Connection issues?** → Verify your HA URL and token
